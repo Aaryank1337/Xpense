@@ -199,7 +199,7 @@ const CommunityFeed = () => {
                   <Button 
                     startIcon={<ThumbUpIcon />} 
                     onClick={() => handleLikePost(post._id)}
-                    color="default"
+                    color="primary"
                   >
                     {post.likes || 0} {post.likes === 1 ? 'Like' : 'Likes'}
                   </Button>

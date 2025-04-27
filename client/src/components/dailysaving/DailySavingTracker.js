@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import api from '../../services/api'; // Add this to import the default api instance
 import { toggleDailySaving, getDailySavingStatus, getDailySavingHistory } from '../../services/api';
 import { useCallback } from 'react';
 import {
@@ -114,21 +115,43 @@ const DailySavingTracker = () => {
 
   const handleToggleSaving = async () => {
     try {
-      const response = await toggleDailySaving({ 
+      // Toggle saving status (mark as saved or not saved)
+      const response = await toggleDailySaving({
         didSaveToday: !didSaveToday,
         note: note
       });
+  
       setDidSaveToday(!didSaveToday);
+  
+      // Update quote when toggling saving status
       if (response.data.quote) {
-        setQuote(response.data.quote); // Update quote when toggling saving status
+        setQuote(response.data.quote);
       }
+  
+      // Transfer tokens if saved today
+      if (!didSaveToday) {
+        await transferTokens(10); // This should be an API call to transfer tokens
+        alert('You have earned 10 EDU tokens for saving today!');
+      }
+  
       fetchData(); // Refresh data
     } catch (err) {
       console.error('Error toggling daily saving:', err);
       setError('Failed to update daily saving status. Please try again.');
     }
   };
-
+  
+  // Transfer tokens function (example, assuming an API exists)
+  const transferTokens = async (amount) => {
+    try {
+      await api.transferTokens(user.id, amount);  // Replace with your actual API call
+      console.log(`Successfully transferred ${amount} tokens.`);
+    } catch (err) {
+      console.error('Error transferring tokens:', err);
+      setError('Failed to transfer tokens. Please try again.');
+    }
+  };
+  
   const handleUpdateNote = async () => {
     try {
       await toggleDailySaving({ 

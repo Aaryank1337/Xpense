@@ -54,6 +54,7 @@ export const seedBooks = () => api.post('/books/seed');
 // Token API calls
 export const rewardTokens = (data) => api.post('/tokens/reward', data);
 export const getTransactionHistory = () => api.get('/tokens/transactions');
+export const transferTokens = (data) => api.post('/tokens/transfer', data); // Using POST instead of GET
 
 // Quiz API calls
 export const getRandomQuizzes = (category, count) => {

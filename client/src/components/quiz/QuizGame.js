@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { submitQuizAnswer } from '../../services/api';
+import { submitQuizAnswer, transferTokens } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import {
   Box,
@@ -33,13 +33,13 @@ const QuizGame = ({ questions, onEndQuiz, category }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [quizComplete, setQuizComplete] = useState(false);
+  const [transferComplete, setTransferComplete] = useState(false);
   const [quizResults, setQuizResults] = useState({
     correct: 0,
     incorrect: 0,
     totalPoints: 0,
     answers: []
   });
-  // New state for flashcard mode
   const [isFlipped, setIsFlipped] = useState(false);
   const [flashcardMode, setFlashcardMode] = useState(true);
 
@@ -76,35 +76,37 @@ const QuizGame = ({ questions, onEndQuiz, category }) => {
       setError('Please select an answer');
       return;
     }
-
+  
     try {
       setLoading(true);
       setError('');
-      
+  
+      // Submit the answer to the backend
       const response = await submitQuizAnswer(currentQuestion._id, selectedAnswer);
       setResult(response.data);
       setAnswerSubmitted(true);
-      
+  
+      // Award 5 points for each correct answer (from first paste)
+      const pointsEarned = response.data.isCorrect ? 5 : 0;
+  
       // Update quiz results
       setQuizResults(prev => ({
         ...prev,
         correct: prev.correct + (response.data.isCorrect ? 1 : 0),
         incorrect: prev.incorrect + (response.data.isCorrect ? 0 : 1),
-        totalPoints: prev.totalPoints + response.data.pointsEarned,
-        answers: [...prev.answers, {
-          question: currentQuestion.question,
-          selectedAnswer,
-          correctAnswer: response.data.correctAnswer,
-          isCorrect: response.data.isCorrect,
-          pointsEarned: response.data.pointsEarned
-        }]
+        totalPoints: prev.totalPoints + pointsEarned,
+        answers: [
+          ...prev.answers,
+          {
+            question: currentQuestion.question,
+            selectedAnswer,
+            correctAnswer: response.data.correctAnswer,
+            isCorrect: response.data.isCorrect,
+            pointsEarned,
+          }
+        ]
       }));
-      
-      // Update user tokens in context if tokens were earned
-      if (response.data.pointsEarned > 0 && user) {
-        updateUserData({ tokens: user.tokens + response.data.pointsEarned });
-      }
-      
+  
     } catch (err) {
       console.error('Error submitting answer:', err);
       setError('Failed to submit your answer');
@@ -112,7 +114,7 @@ const QuizGame = ({ questions, onEndQuiz, category }) => {
       setLoading(false);
     }
   };
-
+  
   const handleNextQuestion = () => {
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
@@ -122,11 +124,61 @@ const QuizGame = ({ questions, onEndQuiz, category }) => {
       setIsFlipped(false); // Reset flip state for next card
     } else {
       setQuizComplete(true);
+      
+      // If there are points to transfer, do it when quiz is complete
+      if (quizResults.totalPoints > 0 && user) {
+        handleTokenTransfer();
+      }
     }
   };
 
-
-
+  const handleTokenTransfer = async () => {
+    try {
+      console.log('Starting token transfer...');
+      setLoading(true);
+      
+      // Log the current quiz results and user info
+      console.log('Quiz Results:', quizResults);
+      console.log('User Info:', user);
+      
+      // Only transfer if there are points and we haven't transferred yet
+      if (quizResults.totalPoints > 0 && user && !transferComplete) {
+        const challengeId = `quiz_${category || 'general'}_${Date.now()}`;
+        console.log('Generated Challenge ID:', challengeId);
+  
+        // Log the transfer details before making the API call
+        console.log('Transfer Details:', {
+          challengeId: challengeId,
+          amount: quizResults.totalPoints,
+          recipientWallet: user.walletPublicKey
+        });
+        
+        const response = await transferTokens({
+          challengeId: challengeId,
+          amount: quizResults.totalPoints,
+          recipientWallet: user.walletPublicKey
+        });
+  
+        console.log('Token transfer response:', response);
+  
+        if (response && response.txHash) {
+          console.log('Token transfer successful, transaction hash:', response.txHash);
+          setTransferComplete(true);
+        } else {
+          console.log('Token transfer failed, no transaction hash received');
+        }
+      } else {
+        console.log('Skipping transfer. Either no points or transfer already completed');
+      }
+    } catch (error) {
+      console.error('Error transferring tokens:', error);
+      setError('Token transfer failed. Please contact support.');
+    } finally {
+      setLoading(false);
+      console.log('Token transfer process completed.');
+    }
+  };
+  
   if (loading && !answerSubmitted) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
@@ -170,6 +222,19 @@ const QuizGame = ({ questions, onEndQuiz, category }) => {
             </Box>
           </Box>
           
+          {quizResults.totalPoints > 0 && (
+            <Alert 
+              severity={transferComplete ? "success" : "info"} 
+              sx={{ mb: 3 }}
+            >
+              {transferComplete 
+                ? `${quizResults.totalPoints} EDU tokens have been transferred to your wallet!` 
+                : loading 
+                  ? "Transferring tokens to your wallet..." 
+                  : "Your tokens will be transferred shortly."}
+            </Alert>
+          )}
+          
           <Typography variant="subtitle1" gutterBottom>
             Question Summary:
           </Typography>
@@ -212,6 +277,7 @@ const QuizGame = ({ questions, onEndQuiz, category }) => {
               color="primary" 
               onClick={onEndQuiz}
               size="large"
+              disabled={loading}
             >
               Return to Quiz Menu
             </Button>
@@ -393,7 +459,7 @@ const QuizGame = ({ questions, onEndQuiz, category }) => {
     );
   }
 
-  // Standard quiz mode UI (original implementation)
+  // Standard quiz mode UI
   return (
     <Box>
       <Typography variant="h4" gutterBottom>

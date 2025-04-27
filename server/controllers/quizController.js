@@ -2,6 +2,7 @@ const Quiz = require("../models/Quiz");
 const QuizAttempt = require("../models/QuizAttempt");
 const User = require("../models/User");
 const Transaction = require("../models/Transaction");
+const mongoose = require('mongoose');
 
 // Get all quiz questions (admin only)
 exports.getAllQuizzes = async (req, res) => {
@@ -91,16 +92,31 @@ exports.submitAnswer = async (req, res) => {
     // Update user tokens if correct and within daily limit
     if (tokenRewardAllowed) {
       const user = await User.findById(req.userId);
-      if (user) {
-        user.tokens += pointsEarned;
-        await user.save();
+      if (user && user.walletPublicKey) {
+        // Transfer EDU tokens to user's Stellar wallet
+        const transferResult = await transferEDU(user.walletPublicKey, pointsEarned);
         
-        // Log the transaction
-        await Transaction.create({
-          userId: req.userId,
-          amount: pointsEarned,
-          txHash: `quiz_reward_${Date.now()}`,
-          challengeId: quiz._id
+        if (transferResult.success) {
+          user.tokens += pointsEarned;
+          await user.save();
+          
+          // Log the transaction with actual blockchain tx hash
+          await Transaction.create({
+            userId: req.userId,
+            amount: pointsEarned,
+            txHash: transferResult.txHash,
+            challengeId: quiz._id
+          });
+        } else {
+          console.error('Failed to transfer EDU tokens:', transferResult.error);
+          return res.status(500).json({ 
+            message: 'Failed to transfer tokens', 
+            error: transferResult.error 
+          });
+        }
+      } else {
+        return res.status(400).json({ 
+          message: 'User wallet not configured. Please set up your wallet first.' 
         });
       }
     }

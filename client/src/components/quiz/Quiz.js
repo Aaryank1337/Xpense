@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { getRandomQuizzes, getUserQuizStats, seedQuizQuestions } from '../../services/api';
+import { getRandomQuizzes, seedQuizQuestions } from '../../services/api';
 import {
   Box,
   Typography,
@@ -16,7 +16,6 @@ import {
   Tab,
 } from '@mui/material';
 import QuizGame from './QuizGame';
-import QuizStats from './QuizStats';
 import QuizLeaderboard from './QuizLeaderboard';
 
 const Quiz = () => {
@@ -24,28 +23,9 @@ const Quiz = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [stats, setStats] = useState(null);
   const [quizStarted, setQuizStarted] = useState(false);
   const [quizQuestions, setQuizQuestions] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('');
-
-  useEffect(() => {
-    fetchUserStats();
-  }, []);
-
-  const fetchUserStats = async () => {
-    try {
-      setLoading(true);
-      setError('');
-      const response = await getUserQuizStats();
-      setStats(response.data);
-    } catch (err) {
-      console.error('Error fetching user stats:', err);
-      setError('Failed to load your quiz statistics');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleStartQuiz = async (category = '') => {
     try {
@@ -66,7 +46,6 @@ const Quiz = () => {
 
   const handleEndQuiz = () => {
     setQuizStarted(false);
-    fetchUserStats(); // Refresh stats after quiz
   };
 
   const handleTabChange = (event, newValue) => {
@@ -121,7 +100,6 @@ const Quiz = () => {
         <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
           <Tabs value={activeTab} onChange={handleTabChange}>
             <Tab label="Play Quiz" />
-            <Tab label="Your Stats" />
             <Tab label="Leaderboard" />
           </Tabs>
         </Box>
@@ -223,7 +201,7 @@ const Quiz = () => {
                 </Card>
               </Grid>
             </Grid>
-
+{/* 
             <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
               <Button 
                 variant="outlined" 
@@ -233,15 +211,11 @@ const Quiz = () => {
               >
                 Seed Quiz Questions
               </Button>
-            </Box>
+            </Box> */}
           </Box>
         )}
 
         {activeTab === 1 && (
-          <QuizStats stats={stats} />
-        )}
-
-        {activeTab === 2 && (
           <QuizLeaderboard />
         )}
       </Paper>

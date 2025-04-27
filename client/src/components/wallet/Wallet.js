@@ -96,7 +96,7 @@ const Wallet = () => {
               <List>
                 <ListItem>
                   <ListItemText 
-                    primary="Complete Challenges" 
+                    primary="Complete Tasks" 
                     secondary="Set financial goals and achieve them to earn tokens"
                   />
                 </ListItem>
@@ -105,13 +105,6 @@ const Wallet = () => {
                   <ListItemText 
                     primary="Maintain Spending Habits" 
                     secondary="Keep your expenses below your budget consistently"
-                  />
-                </ListItem>
-                <Divider component="li" />
-                <ListItem>
-                  <ListItemText 
-                    primary="Learn Financial Skills" 
-                    secondary="Complete educational modules about personal finance"
                   />
                 </ListItem>
               </List>

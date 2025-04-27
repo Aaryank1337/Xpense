@@ -62,20 +62,43 @@ exports.purchaseBook = async (req, res) => {
       return res.status(400).json({ message: "Please set up your wallet first" });
     }
     
-    // Create a transaction record (negative amount for purchase)
-    const transaction = await Transaction.create({
-      userId: req.userId,
-      amount: -book.price, // Negative amount for purchase
-      txHash: "book-purchase-" + Date.now(), // Placeholder hash
-      date: new Date()
-    });
-    
-    // Create user book record
-    const userBook = await UserBook.create({
-      userId: req.userId,
-      bookId: id,
-      tokensPaid: book.price
-    });
+    // Transfer tokens to distribution wallet
+    const distributionWallet = process.env.DISTRIBUTION_WALLET_PUBLIC_KEY;
+    if (!distributionWallet) {
+      return res.status(500).json({ message: "Distribution wallet not configured" });
+    }
+
+    try {
+      // Transfer tokens from user to distribution wallet
+      await rewardTokens({
+        body: {
+          amount: -book.price, // Negative amount for purchase
+          recipientWallet: distributionWallet
+        },
+        userId: req.userId
+      }, { json: () => {} });
+
+      // Create transaction record
+      const transaction = await Transaction.create({
+        userId: req.userId,
+        amount: -book.price,
+        txHash: "book-purchase-" + Date.now(),
+        date: new Date()
+      });
+      
+      // Create user book record
+      const userBook = await UserBook.create({
+        userId: req.userId,
+        bookId: id,
+        tokensPaid: book.price
+      });
+    } catch (transferError) {
+      console.error('Token transfer failed:', transferError);
+      return res.status(500).json({ 
+        message: "Failed to process book purchase", 
+        error: transferError.message 
+      });
+    }
     
     res.status(201).json({
       message: "Book purchased successfully",

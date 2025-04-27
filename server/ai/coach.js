@@ -8,7 +8,8 @@ async function getBudgetAdvice(spendingSummary) {
 
   // Check if API key is configured
   if (!process.env.GROQ_API_KEY) {
-    return "• Track your daily expenses consistently\n• Set a weekly budget for each category\n• Look for student discounts and deals";
+    console.warn('GROQ_API_KEY not configured in environment variables');
+    return "• Track your daily expenses consistently\n• Set a weekly budget for each category\n• Look for student discounts and deals\n\nNote: AI personalization is temporarily unavailable";
   }
 
   try {
@@ -42,9 +43,10 @@ async function getSpendingAnalysis(spendingData) {
 
   // Check if API key is configured
   if (!process.env.GROQ_API_KEY) {
+    console.warn('GROQ_API_KEY not configured in environment variables');
     return {
-      insights: "• Your spending appears to be concentrated in a few categories\n• Consider setting budget limits for each category\n• Track your expenses daily for better insights",
-      trends: null
+      insights: "• Your spending appears to be concentrated in a few categories\n• Consider setting budget limits for each category\n• Track your expenses daily for better insights\n\nNote: AI personalization is temporarily unavailable",
+      trends: identifyTrends(spendingData)
     };
   }
 
