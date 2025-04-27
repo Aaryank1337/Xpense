@@ -13,7 +13,7 @@ Xpense solves the problem of financial literacy and expense management among stu
 ### Team Name:  
 `NA`
 ### Team Members:  
-- Aaryan Kalbhor ([GitHub](https://github.com/Aaryank1337) / [LinkedIn](https://www.linkedin.com/in/aaryan-kalbhor/) / Student)  
+- Aaryan Kalbhor ([GitHub](https://github.com/Aaryank1337) / [LinkedIn](https://www.linkedin.com/in/aaryan-kalbhor/) / Full Stack Developer)  
 - [Add additional team members]
   
 ### Your Approach:  
