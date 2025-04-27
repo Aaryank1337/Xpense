@@ -15,7 +15,7 @@ async function getBudgetAdvice(spendingSummary) {
   try {
     const prompt = `Here is a student's weekly spending summary:\n${spendingSummary}\nGive 3 smart tips to save money next week in bullet points.`;
 
-    const response = await axios.post("https://api.groq.com/v1/chat/completions", {
+    const response = await axios.post("https://api.groq.com/openai/v1/chat/completions", {
       model: "mixtral-8x7b-32768",
       messages: [{ role: "user", content: prompt }],
     }, {
@@ -60,7 +60,7 @@ async function getSpendingAnalysis(spendingData) {
 
     const prompt = `Here is a student's spending breakdown by category:\n${formattedData}\n\nProvide the following analysis:\n1. Give 3-4 specific insights about spending patterns in bullet points\n2. Identify which categories seem to be taking the most money and suggest if any appear excessive\n3. Suggest one specific action for each major spending category to optimize expenses`;
 
-    const response = await axios.post("https://api.groq.com/v1/chat/completions", {
+    const response = await axios.post("https://api.groq.com/openai/v1/chat/completions", {
       model: "mixtral-8x7b-32768",
       messages: [{ role: "user", content: prompt }],
     }, {

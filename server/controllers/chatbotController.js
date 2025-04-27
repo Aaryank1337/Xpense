@@ -50,7 +50,7 @@ exports.getSpendingAdvice = async (req, res) => {
 
     const prompt = `As a financial advisor, analyze this spending data and answer the user's question:\n\nSpending Summary:\n${spendingContext}\n\nUser Question: ${query}\n\nProvide specific, actionable advice based on the spending patterns shown above. Include specific numbers and percentages where relevant.`;
 
-    const response = await axios.post("https://api.groq.com/v1/chat/completions", {
+    const response = await axios.post("https://api.groq.com/openai/v1/chat/completions", {
       model: "mixtral-8x7b-32768",
       messages: [{ role: "user", content: prompt }],
       temperature: 0.7,
@@ -62,7 +62,15 @@ exports.getSpendingAdvice = async (req, res) => {
       },
     });
 
-    const advice = response.data.choices[0].message.content;
+    if (!response.data || !response.data.choices || !response.data.choices[0]) {
+      throw new Error('Invalid response format from AI service');
+    }
+
+    const advice = response.data.choices[0].message?.content;
+    if (!advice) {
+      throw new Error('No advice content in AI response');
+    }
+
     res.json({ advice });
 
   } catch (err) {
@@ -99,7 +107,7 @@ exports.analyzeBudget = async (req, res) => {
 
     const prompt = `As a financial advisor, analyze this monthly spending data:\n\nMonthly Budget Goal: ₹${budgetGoal}\nTotal Spent: ₹${totalSpent}\n\nSpending Breakdown:\n${spendingContext}\n\nProvide a detailed analysis including:\n1. How well they're tracking against their budget\n2. Which categories might need attention\n3. Specific suggestions for optimization\n4. Potential savings opportunities`;
 
-    const response = await axios.post("https://api.groq.com/v1/chat/completions", {
+    const response = await axios.post("https://api.groq.com/openai/v1/chat/completions", {
       model: "mixtral-8x7b-32768",
       messages: [{ role: "user", content: prompt }],
       temperature: 0.7,
