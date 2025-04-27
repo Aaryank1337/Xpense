@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { getExpenses, getChallenges, getAdvice } from '../../services/api';
+import { getExpenses, getAdvice } from '../../services/api';
+import SpendingVisualization from './SpendingVisualization';
+import SpendingAnalysis from './SpendingAnalysis';
 import {
   Box,
   Typography,
@@ -21,8 +23,8 @@ import { Link } from 'react-router-dom';
 const Dashboard = () => {
   const { user } = useAuth();
   const [expenses, setExpenses] = useState([]);
-  const [challenges, setChallenges] = useState([]);
   const [advice, setAdvice] = useState('');
+  const [analysis, setAnalysis] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -33,15 +35,14 @@ const Dashboard = () => {
         setError('');
 
         // Fetch data in parallel
-        const [expensesRes, challengesRes, adviceRes] = await Promise.all([
+        const [expensesRes, adviceRes] = await Promise.all([
           getExpenses(),
-          getChallenges(),
           getAdvice()
         ]);
 
         setExpenses(expensesRes.data);
-        setChallenges(challengesRes.data);
         setAdvice(adviceRes.data.advice);
+        setAnalysis(adviceRes.data.analysis);
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
         setError('Failed to load dashboard data. Please try again.');
@@ -61,10 +62,7 @@ const Dashboard = () => {
     .sort((a, b) => new Date(b.date) - new Date(a.date))
     .slice(0, 5);
 
-  // Get active challenges (not completed and not expired)
-  const activeChallenge = challenges
-    .filter(challenge => !challenge.completed && new Date(challenge.endDate) >= new Date())
-    .sort((a, b) => new Date(a.endDate) - new Date(b.endDate))[0]; // Get the closest to ending
+
 
   if (loading) {
     return (
@@ -123,6 +121,16 @@ const Dashboard = () => {
             </Typography>
           </Paper>
         </Grid>
+        
+        {/* Spending Visualization */}
+        <Grid item xs={12}>
+          <SpendingVisualization expenses={expenses} />
+        </Grid>
+        
+        {/* AI Spending Analysis */}
+        <Grid item xs={12}>
+          <SpendingAnalysis analysis={analysis} />
+        </Grid>
 
         {/* Recent Expenses */}
         <Grid item xs={12} md={6}>
@@ -158,51 +166,6 @@ const Dashboard = () => {
                 fullWidth
               >
                 View All Expenses
-              </Button>
-            </Box>
-          </Paper>
-        </Grid>
-
-        {/* Active Challenge */}
-        <Grid item xs={12} md={6}>
-          <Paper elevation={2} sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Active Challenge
-            </Typography>
-            <Divider sx={{ mb: 2 }} />
-            {activeChallenge ? (
-              <Card variant="outlined">
-                <CardContent>
-                  <Typography variant="h6">{activeChallenge.title}</Typography>
-                  <Typography variant="body2" color="text.secondary" gutterBottom>
-                    {activeChallenge.description}
-                  </Typography>
-                  <Box sx={{ mt: 1 }}>
-                    <Typography variant="body2">
-                      Target: ₹{activeChallenge.targetAmount.toFixed(2)}
-                    </Typography>
-                    <Typography variant="body2">
-                      Ends: {new Date(activeChallenge.endDate).toLocaleDateString()}
-                    </Typography>
-                    <Typography variant="body2" color="primary">
-                      Reward: {activeChallenge.reward} EDU Tokens
-                    </Typography>
-                  </Box>
-                </CardContent>
-              </Card>
-            ) : (
-              <Typography variant="body2" color="text.secondary">
-                No active challenges. Create a new challenge to earn EDU tokens!
-              </Typography>
-            )}
-            <Box sx={{ mt: 2 }}>
-              <Button 
-                variant="outlined" 
-                component={Link} 
-                to="/challenges"
-                fullWidth
-              >
-                Manage Challenges
               </Button>
             </Box>
           </Paper>

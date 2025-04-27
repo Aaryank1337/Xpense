@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { getTransactionHistory } from '../../services/api';
 import {
   Box,
   Typography,
@@ -19,35 +20,40 @@ import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 
 const Wallet = () => {
-  const { user } = useAuth();
-  const [loading, setLoading] = useState(false);
+  const { user, updateUserData } = useAuth();
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [transactions, setTransactions] = useState([]);
 
-  // In a real application, you would fetch transaction history from the API
-  // For now, we'll use mock data based on the user's token balance
-  const mockTransactions = [
-    {
-      id: 1,
-      type: 'Reward',
-      amount: 10,
-      description: 'Completed "Save on Food" challenge',
-      date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days ago
-    },
-    {
-      id: 2,
-      type: 'Reward',
-      amount: 15,
-      description: 'Completed "Reduce Transportation Costs" challenge',
-      date: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(), // 14 days ago
-    },
-    {
-      id: 3,
-      type: 'Reward',
-      amount: 5,
-      description: 'Completed "No Unnecessary Shopping" challenge',
-      date: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString(), // 21 days ago
-    },
-  ];
+  useEffect(() => {
+    const fetchTransactionHistory = async () => {
+      try {
+        setLoading(true);
+        setError('');
+        
+        const response = await getTransactionHistory();
+        setTransactions(response.data);
+        
+        // Update user token balance in context if needed
+        if (user && response.data.length > 0) {
+          // Calculate total tokens from transactions
+          const totalTokens = response.data.reduce((sum, tx) => sum + tx.amount, 0);
+          
+          // Only update if the calculated total is different from current user tokens
+          if (totalTokens !== user.tokens) {
+            updateUserData({ tokens: totalTokens });
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching transaction history:', err);
+        setError('Failed to load transaction history. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTransactionHistory();
+  }, [user, updateUserData]);
 
   if (loading) {
     return (
@@ -119,9 +125,13 @@ const Wallet = () => {
         <Typography variant="h5" gutterBottom>Transaction History</Typography>
         <Divider sx={{ mb: 2 }} />
         
-        {mockTransactions.length > 0 ? (
+        {loading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', my: 3 }}>
+            <CircularProgress />
+          </Box>
+        ) : transactions.length > 0 ? (
           <List>
-            {mockTransactions.map((transaction) => (
+            {transactions.map((transaction) => (
               <ListItem key={transaction.id} divider>
                 <ListItemText
                   primary={

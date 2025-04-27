@@ -1,21 +1,26 @@
-import React from 'react';
-import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import {
   AppBar,
-  Box,
   Toolbar,
   Typography,
   Button,
+  Box,
   IconButton,
   Menu,
   MenuItem,
   Avatar,
   Divider,
 } from '@mui/material';
+import ChatbotModal from '../chatbot/ChatbotModal';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import ReceiptIcon from '@mui/icons-material/Receipt';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
+import LogoutIcon from '@mui/icons-material/Logout';
 import MenuIcon from '@mui/icons-material/Menu';
-import { useState } from 'react';
 
 const Navbar = () => {
   const { user, logout, isAuthenticated } = useAuth();
@@ -46,11 +51,12 @@ const Navbar = () => {
   };
 
   return (
+    <>
     <AppBar position="static">
       <Toolbar>
         <Typography
           variant="h6"
-          component={RouterLink}
+          component={Link}
           to={isAuthenticated ? '/dashboard' : '/'}
           sx={{ flexGrow: 1, textDecoration: 'none', color: 'inherit', display: 'flex', alignItems: 'center' }}
         >
@@ -82,8 +88,15 @@ const Navbar = () => {
                 <MenuItem onClick={() => { handleMobileClose(); navigate('/expenses'); }}>
                   Expenses
                 </MenuItem>
-                <MenuItem onClick={() => { handleMobileClose(); navigate('/challenges'); }}>
-                  Challenges
+
+                <MenuItem onClick={() => { handleMobileClose(); navigate('/community'); }}>
+                  Community
+                </MenuItem>
+                <MenuItem onClick={() => { handleMobileClose(); navigate('/daily-saving'); }}>
+                  Daily Saving
+                </MenuItem>
+                <MenuItem onClick={() => { handleMobileClose(); navigate('/bookstore'); }}>
+                  Book Store
                 </MenuItem>
                 <MenuItem onClick={() => { handleMobileClose(); navigate('/wallet'); }}>
                   Wallet
@@ -108,16 +121,23 @@ const Navbar = () => {
         <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
           {isAuthenticated ? (
             <>
-              <Button color="inherit" component={RouterLink} to="/dashboard">
+              <Button color="inherit" component={Link} to="/dashboard">
                 Dashboard
               </Button>
-              <Button color="inherit" component={RouterLink} to="/expenses">
+              <Button color="inherit" component={Link} to="/expenses">
                 Expenses
               </Button>
-              <Button color="inherit" component={RouterLink} to="/challenges">
-                Challenges
+
+              <Button color="inherit" component={Link} to="/community">
+                Community
               </Button>
-              <Button color="inherit" component={RouterLink} to="/wallet">
+              <Button color="inherit" component={Link} to="/daily-saving">
+                Daily Saving
+              </Button>
+              <Button color="inherit" component={Link} to="/bookstore">
+                Book Store
+              </Button>
+              <Button color="inherit" component={Link} to="/wallet">
                 Wallet
               </Button>
               <IconButton
@@ -141,10 +161,10 @@ const Navbar = () => {
             </>
           ) : (
             <>
-              <Button color="inherit" component={RouterLink} to="/login">
+              <Button color="inherit" component={Link} to="/login">
                 Login
               </Button>
-              <Button color="inherit" variant="outlined" component={RouterLink} to="/signup">
+              <Button color="inherit" variant="outlined" component={Link} to="/signup">
                 Sign Up
               </Button>
             </>
@@ -152,6 +172,8 @@ const Navbar = () => {
         </Box>
       </Toolbar>
     </AppBar>
+    <ChatbotModal />
+    </>
   );
 };
 

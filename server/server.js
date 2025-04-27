@@ -1,7 +1,8 @@
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
-const connectDB = require("./config/db");
+const db = require("./config/db");
+const connectDB = db.connectDB;
 
 dotenv.config();
 connectDB();
@@ -14,16 +15,25 @@ app.get("/", (req, res) => res.send("Xpense Backend Running"));
 
 const authRoutes = require("./routes/authRoutes");
 const expenseRoutes = require("./routes/expenseRoutes");
-const challengeRoutes = require("./routes/challengeRoutes");
 const tokenRoutes = require("./routes/tokenRoutes");
-const rewardRoutes = require("./routes/rewardRoutes");
+const chatbotRoutes = require("./routes/chatbotRoutes");
+// New simplified features
+const communityRoutes = require("./routes/communityRoutes");
+const dailySavingRoutes = require("./routes/dailySavingRoutes");
+const bookRoutes = require("./routes/bookRoutes");
+const quizRoutes = require("./routes/quizRoutes");
 
 
-app.use("/api/rewards", rewardRoutes);
 app.use("/api/tokens", tokenRoutes);
-app.use("/api/challenges", challengeRoutes);
-app.use("/api/auth", authRoutes);
+app.use("/api/auth", authRoutes); 
 app.use("/api/expenses", expenseRoutes);
+app.use("/api/chatbot", chatbotRoutes);
+// New simplified feature routes
+app.use("/api/community", communityRoutes);
+app.use("/api/daily-saving", dailySavingRoutes);
+app.use("/api/books", bookRoutes);
+app.use("/api/quiz", quizRoutes);
+
 
 
 
